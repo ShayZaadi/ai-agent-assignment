@@ -1,4 +1,74 @@
-# AI Agent — Assignment 1: Orchestration of Tool Use
+# AI Agent — Assignments 1 & 2
+
+## Overview
+
+A two-part project building toward a full multi-agent system.
+
+Assignment 1 is a single-file agent with LLM-based routing, external tools, and persistent memory.
+
+Assignment 2 extends it using the OpenAI Agents SDK with proper agent architecture, handoffs, guardrails, and a persona.
+
+## Assignment 2 — Multi-Agent System
+
+### Architecture
+
+```
+User Input (Gradio UI)
+    │
+    ▼
+Input Guardrail (safety check)
+    │
+    ▼
+RouterAgent (gpt-5.4-mini, Few-Shot)
+    │
+    ├── handoff → WeatherAgent → get_weather tool
+    ├── handoff → MathAgent → calculate_math tool
+    ├── handoff → ExchangeAgent → get_exchange_rate tool
+    └── handoff → ChatAgent → persona (cynical assistant)
+                      │
+                  Output Guardrail
+    │
+    ▼
+Response + Saved to history.json
+```
+
+### What's new
+
+- OpenAI Agents SDK with Agent, Runner, handoffs
+- Few-Shot Router with border case examples
+- Structured Output via Pydantic, no manual JSON parsing
+- Input and Output Guardrails
+- ChatAgent persona - cynical but helpful
+
+### Running
+
+```bash
+echo "OPENAI_API_KEY=sk-..." >> .env
+python agents_v2.py
+```
+
+Then open http://localhost:7860
+
+### Unit Tests
+
+```bash
+python -m pytest test_agents_v2.py -v
+```
+
+### Files
+
+```
+ai_agent_project/
+├── agents_v2.py      # main file for assignment 2
+├── tools.py          # shared tools
+├── prompts.py        # agent prompts
+├── test_agents_v2.py
+└── screenshots/
+```
+
+---
+
+## Assignment 1 — Orchestration of Tool Use
 
 ## Overview
 
@@ -162,8 +232,12 @@ Agent: I don't know your name. You didn't tell me.
 
 ```
 ai_agent_project/
-├── agent.py          # Main agent — router, tools, orchestrator, memory
-├── requirements.txt  # Python dependencies
-├── README.md         # This file
-└── history.json      # Auto-generated — persisted conversation history
+├── agent.py            # assignment 1 - single-file agent
+├── agents_v2.py        # assignment 2 - multi-agent system
+├── tools.py            # shared tools and persistence
+├── prompts.py          # all agent prompts (assignment 2)
+├── test_agents_v2.py   # unit tests
+├── requirements.txt
+├── README.md
+└── screenshots/        # test run screenshots
 ```
