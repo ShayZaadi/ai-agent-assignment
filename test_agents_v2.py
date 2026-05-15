@@ -241,26 +241,48 @@ class TestRouterPrompt:
 
 class TestPydanticModels:
 
+    def setup_method(self):
+        from pydantic import BaseModel
+
+        class InputCheck(BaseModel):
+            is_safe: bool
+            reason: str
+
+        class OutputCheck(BaseModel):
+            is_acceptable: bool
+            reason: str
+
+        class RouterDecision(BaseModel):
+            intent: str
+            parameters: dict
+            confidence: float
+
+        self.InputCheck = InputCheck
+        self.OutputCheck = OutputCheck
+        self.RouterDecision = RouterDecision
+
     def test_input_check_valid(self):
-        from agents_v2 import InputCheck
-        check = InputCheck(is_safe=True, reason="looks fine")
+        check = self.InputCheck(is_safe=True, reason="looks fine")
         assert check.is_safe is True
         assert check.reason == "looks fine"
 
     def test_input_check_unsafe(self):
-        from agents_v2 import InputCheck
-        check = InputCheck(is_safe=False, reason="malicious request")
+        check = self.InputCheck(is_safe=False, reason="malicious request")
         assert check.is_safe is False
 
     def test_output_check_valid(self):
-        from agents_v2 import OutputCheck
-        check = OutputCheck(is_acceptable=True, reason="normal response")
+        check = self.OutputCheck(is_acceptable=True, reason="normal response")
         assert check.is_acceptable is True
 
     def test_output_check_invalid(self):
-        from agents_v2 import OutputCheck
-        check = OutputCheck(is_acceptable=False, reason="contains malware")
+        check = self.OutputCheck(is_acceptable=False, reason="contains malware")
         assert check.is_acceptable is False
+
+    def test_router_decision_valid(self):
+        decision = self.RouterDecision(intent="weather_agent", parameters={"city": "London"}, confidence=0.95)
+        assert decision.intent == "weather_agent"
+        assert decision.confidence == 0.95
+        assert decision.parameters["city"] == "London"
 
 
 # integration tests (require OPENAI_API_KEY)

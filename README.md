@@ -70,8 +70,6 @@ ai_agent_project/
 
 ## Assignment 1 — Orchestration of Tool Use
 
-## Overview
-
 An intelligent agent system built with LLM-based routing, external tool integration,
 and persistent conversation memory. The agent classifies each user request and delegates
 it to the appropriate tool — or chains multiple tools together to answer complex questions.

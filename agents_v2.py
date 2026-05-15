@@ -61,6 +61,20 @@ class OutputCheck(BaseModel):
     is_acceptable: bool
     reason: str
 
+class RouterDecision(BaseModel):
+    intent: str
+    parameters: dict
+    confidence: float
+
+
+# logs structured routing decision before handoff
+
+@function_tool
+def log_routing_decision(intent: str, parameters: str, confidence: float) -> str:
+    """Log the router's decision as structured output."""
+    print(f'[structured output] intent={intent} params={parameters} confidence={confidence:.2f}')
+    return f"Routing to {intent} with confidence {confidence:.2f}"
+
 
 # guardrail agents
 
@@ -132,6 +146,7 @@ router_agent = Agent(
     name="RouterAgent",
     instructions=ROUTER_INSTRUCTIONS,
     model=MODEL,
+    tools=[log_routing_decision],
     handoffs=[
         handoff(weather_agent),
         handoff(math_agent),
@@ -157,13 +172,25 @@ async def chat(user_input: str, gradio_history: list) -> str:
     # build context from recent messages
     history_text = ""
     if gradio_history:
+        # active session - use gradio history
         for msg in gradio_history[-10:]:
+            role = msg.get("role", "")
+            content = msg.get("content", "")
+            if role and content:
+                history_text += f"{role.capitalize()}: {content}\n"
+    elif conversation_history:
+        # fresh session after restart - inject saved history
+        for msg in conversation_history[-10:]:
             role = msg.get("role", "")
             content = msg.get("content", "")
             if role and content:
                 history_text += f"{role.capitalize()}: {content}\n"
 
     full_input = f"{history_text}User: {user_input}" if history_text else user_input
+
+    # block empty input before it reaches the guardrail agent
+    if not user_input.strip():
+        return "I cannot process this request due to safety protocols."
 
     response = "Something went wrong. Please try again."
 
@@ -183,7 +210,7 @@ async def chat(user_input: str, gradio_history: list) -> str:
 
     except Exception as e:
         if "tripwire" in str(e).lower() or "guardrail" in str(e).lower():
-            response = "I can't help with that request."
+            response = "I cannot process this request due to safety protocols."
         else:
             response = f"Error: {e}"
 
